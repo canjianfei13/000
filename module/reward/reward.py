@@ -85,6 +85,8 @@ class Reward(UI):
         timeout = Timer(10)
         exit_timer.start()
         timeout.start()
+        # Record received missions to clear click record
+        clicked_mission = False
 
         reward = False
         while 1:
@@ -98,14 +100,19 @@ class Reward(UI):
                     exit_timer.reset()
                     timeout.reset()
                     reward = True
+                    # MISSION_SINGLE -> GET_ITEMS_* means one mission reward received
+                    if clicked_mission:
+                        logger.info('Got items from mission')
+                        self.device.click_record_clear()
+                        clicked_mission = False
                     continue
 
             for button in [MISSION_MULTI, MISSION_SINGLE]:
                 if not click_timer.reached():
                     continue
-                if self.appear(button, offset=(20, 200), interval=interval) \
-                        and button.match_appear_on(self.device.image):
+                if self.match_template_color(button, offset=(20, 200), interval=interval):
                     self.device.click(button)
+                    clicked_mission = True
                     exit_timer.reset()
                     click_timer.reset()
                     timeout.reset()
@@ -177,7 +184,8 @@ class Reward(UI):
         Returns:
             bool, if handled
         """
-        if not self.appear(MISSION_WEEKLY_RED_DOT):
+        if not self.image_color_count(MISSION_WEEKLY_RED_DOT, color=(206, 81, 66), threshold=221, count=20):
+            logger.info('No MISSION_WEEKLY_RED_DOT')
             return False
 
         self.reward_side_navbar_ensure(upper=5)

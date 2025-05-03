@@ -24,9 +24,11 @@ class EmotionDigit(Digit):
     def pre_process(self, image):
         if server.server == 'jp':
             image_gray = extract_letters(image, letter=(255, 255, 255), threshold=self.threshold)
-            right_side = np.nonzero(image_gray[0:16, :].min(axis=0) > 176)[-1]
-            image = image[:, :right_side[-1]]
-
+            right_side = np.nonzero(image_gray[0:16, :].max(axis=0) > 192)[-1]
+            for i, col in enumerate(right_side):
+                if i < col:
+                    break
+            image = image[:, :i]
         image = super().pre_process(image)
         return image
 
@@ -61,6 +63,10 @@ class Ship:
                 # tuple means should be in range
                 elif isinstance(value, tuple):
                     if not (value[0] <= self.__dict__[key] <= value[1]):
+                        return False
+                # list means should be in the list
+                elif isinstance(value, list):
+                    if self.__dict__[key] not in value:
                         return False
 
         return True
@@ -382,6 +388,8 @@ class ShipScanner(Scanner):
             lower = self.sub_scanners[key].limit_value(lower)
             upper = self.sub_scanners[key].limit_value(upper)
             self.limitaion[key] = (lower, upper)
+        elif isinstance(value, list):
+            self.limitaion[key] = [self.sub_scanners[key].limit_value(v) for v in value]
         else:
             self.limitaion[key] = self.sub_scanners[key].limit_value(value)
 
