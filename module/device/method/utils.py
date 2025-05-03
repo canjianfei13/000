@@ -73,6 +73,38 @@ u2.setup_logger = setup_logger
 u2.init.setup_logger = setup_logger
 
 
+# Patch Initer
+class PatchedIniter(u2.init.Initer):
+    @property
+    def atx_agent_url(self):
+        files = {
+            'armeabi-v7a': 'atx-agent_{v}_linux_armv7.tar.gz',
+            # 'arm64-v8a': 'atx-agent_{v}_linux_armv7.tar.gz',
+            'arm64-v8a': 'atx-agent_{v}_linux_arm64.tar.gz',
+            'armeabi': 'atx-agent_{v}_linux_armv6.tar.gz',
+            'x86': 'atx-agent_{v}_linux_386.tar.gz',
+            'x86_64': 'atx-agent_{v}_linux_386.tar.gz',
+        }
+        name = None
+        for abi in self.abis:
+            name = files.get(abi)
+            if name:
+                break
+        if not name:
+            raise Exception(
+                "arch(%s) need to be supported yet, please report an issue in github"
+                % self.abis)
+        return u2.init.GITHUB_BASEURL + '/atx-agent/releases/download/%s/%s' % (
+            u2.version.__atx_agent_version__, name.format(v=u2.version.__atx_agent_version__))
+
+    @property
+    def minicap_urls(self):
+        return []
+
+
+u2.init.Initer = PatchedIniter
+
+
 def is_port_using(port_num):
     """ if port is using by others, return True. else return False """
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -154,16 +186,16 @@ class ImageTruncated(Exception):
 def retry_sleep(trial):
     # First trial
     if trial == 0:
-        pass
+        return 0
     # Failed once, fast retry
     elif trial == 1:
-        pass
+        return 0
     # Failed twice
     elif trial == 2:
-        time.sleep(1)
+        return 1
     # Failed more
     else:
-        time.sleep(RETRY_DELAY)
+        return RETRY_DELAY
 
 
 def handle_adb_error(e):
@@ -204,6 +236,11 @@ def handle_adb_error(e):
     elif 'is offline' in text:
         # RuntimeError: USB device 127.0.0.1:7555 is offline
         # Raised by uiautomator2 when current adb service is killed by another version of adb service.
+        logger.error(e)
+        return True
+    elif text == 'rest':
+        # AdbError(rest)
+        # Response telling adbd service has reset, client should reconnect
         logger.error(e)
         return True
     else:
