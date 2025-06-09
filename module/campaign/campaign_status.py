@@ -8,8 +8,6 @@ import module.config.server as server
 
 from module.base.timer import Timer
 from module.campaign.assets import OCR_EVENT_PT, OCR_COIN, OCR_OIL, OCR_COIN_LIMIT, OCR_OIL_LIMIT, OCR_OIL_CHECK
-from module.base.utils import color_similar, get_color
-from module.logger import logger
 from module.ocr.ocr import Digit, Ocr
 from module.ui.ui import UI
 from module.log_res.log_res import LogRes
@@ -105,11 +103,6 @@ class CampaignStatus(UI):
             else:
                 ocr = Digit(OCR_OIL, name='OCR_OIL', letter=(201, 201, 201), threshold=128)
         elif color_similar(color, (59, 59, 64)):
-            # With black overlay
-            ocr = Digit(OCR_OIL, name='OCR_OIL', letter=(165, 165, 165), threshold=128)
-        else:
-            logger.warning(f'Unexpected OCR_OIL_CHECK color')
-            ocr = Digit(OCR_OIL, name='OCR_OIL', letter=(247, 247, 247), threshold=128)
 
         return ocr.ocr(self.device.image)
 
@@ -139,12 +132,6 @@ class CampaignStatus(UI):
             int: Oil amount
         """
         _oil = {}
-        timeout = Timer(1, count=2).start()
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
 
             if not self.appear(OCR_OIL_CHECK, offset=(10, 2)):
                 logger.info('No oil icon')
