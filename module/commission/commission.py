@@ -10,16 +10,6 @@ from module.commission.assets import *
 from module.commission.preset import DICT_FILTER_PRESET, SHORTEST_FILTER
 from module.commission.project import COMMISSION_FILTER, Commission
 from module.config.config_generated import GeneratedConfig
-from module.config.utils import get_server_last_update, get_server_next_update
-from module.exception import GameStuckError
-from module.handler.info_handler import InfoHandler
-from module.logger import logger
-from module.map.map_grids import SelectedGrids
-from module.retire.assets import DOCK_CHECK
-from module.ui.assets import BACK_ARROW, COMMISSION_CHECK, REWARD_GOTO_COMMISSION
-from module.ui.page import page_reward
-from module.ui.scroll import Scroll
-from module.ui.switch import Switch
 from module.ui.ui import UI
 from module.ui_white.assets import REWARD_1_WHITE, REWARD_GOTO_COMMISSION_WHITE
 
